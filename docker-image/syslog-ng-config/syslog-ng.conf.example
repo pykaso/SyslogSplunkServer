@@ -1,0 +1,66 @@
+@version: 3.26
+@include "scl.conf"
+
+options {
+	chain_hostnames(off);
+	flush_lines(0);
+	use_dns(no);
+	dns-cache(no);
+	use_fqdn(no);
+	owner("root");
+	group("admin");
+	perm(0640);
+	stats_freq(0);
+	create_dirs(1);
+};
+
+#source s_network {
+#	network(
+#		transport("tcp")
+#		port(601)
+#		flags(syslog-protocol)
+#	);
+#};
+
+source s_tls {
+	network(
+		ip(0.0.0.0)
+		port(6514)
+		transport("tls")
+		tls( key-file("/etc/syslog-ng/conf.d/cert.d/serverkey.pem")
+			 cert-file("/etc/syslog-ng/conf.d/cert.d/servercert.pem")
+			 #ca-dir("/etc/syslog-ng/conf.d/ca.d")
+			 peer_verify(no) # no client certificate
+		)
+		flags(syslog-protocol)
+	);
+};
+
+destination d_splunk {
+	file("/var/log/splunk/messages_${YEAR}-${MONTH}-${DAY}.log" template("$ISODATE $HOST $PROGRAM device=${.SDATA.meta.device} iid=${.SDATA.meta.install} uid=${.SDATA.meta.uid} $MESSAGE\n") frac-digits(3));
+};
+
+destination d_unauthorized {
+	file("/var/log/unauthorized_${YEAR}-${MONTH}-${DAY}.log" template("$ISODATE $HOST $PROGRAM message with invalid token=${.SDATA.meta.token}.\n"));
+};
+
+# accept only logs with valid token
+filter f_whitelist { in-list("/etc/syslog-ng/conf.d/enabled_tokens.list", value(".SDATA.meta.token")); };
+filter f_unknown { not in-list("/etc/syslog-ng/conf.d/enabled_tokens.list", value(".SDATA.meta.token")); };
+filter f_not_pid {"${.SDATA.meta.token}" eq ""};
+
+# log messages without valid token
+log { source(s_tls); filter(f_not_pid); destination(d_unauthorized); flags(final);  };
+log { source(s_tls); filter(f_unknown); destination(d_unauthorized); flags(final);  };
+
+log {
+	source(s_tls);
+	filter(f_whitelist);
+	destination(d_splunk);
+};
+
+#log {
+#   source(s_network);
+#   filter(f_whitelist);
+#	destination(d_splunk);
+#};
