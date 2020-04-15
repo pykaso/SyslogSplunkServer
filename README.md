@@ -9,6 +9,10 @@ Accepted log entries are stored to `messages_${YEAR}-${MONTH}-${DAY}.log`  files
 
 
 
+Docker hub site: https://hub.docker.com/r/pykaso/mobile-syslog-splunk
+
+
+
 ## Requirements
 
 - The X.509 certificate in PEM format on the syslog-ng server that identifies the server. Don't forget to set the `Common Name` parameter value to the hostname or the IP address of the server.
@@ -33,7 +37,7 @@ Admin password for Splunk forwarder used to setup admin account must be provided
 
 ## Build
 
-Clone this repository, enter to `docker-image` directory and run command below.
+Clone this repository, enter to `docker-image` directory and run command below to build container locally.
 
 ```
 docker build -t syslog-splunk .
@@ -50,7 +54,7 @@ docker run --name syslog-splunk-forwarder -it -p 6514:6514 \
 --env SPLUNK_PASSWD=securepasswd \
 -v "/Users/pykaso/samples/syslog-ng-config/conf.d":/etc/syslog-ng/conf.d \
 -v "/Users/pykaso/samples/splunk-forwarder/splunkclouduf.spl":"/install/splunkclouduf.spl" \
--v "/Users/pykaso/mobile-logs":/var/log/splunk syslog-splunk
+-v "/Users/pykaso/mobile-logs":/var/log/splunk pykaso/mobile-syslog-splunk
 ```
 
 
@@ -62,7 +66,7 @@ docker run --name syslog-splunk-forwarder -it -p 6514:6514 \
 --env SPLUNK_PASSWD=securepasswd \
 -v "/Users/pykaso/samples/syslog-ng-config/conf.d":/etc/syslog-ng/conf.d \
 -v "/Users/pykaso/samples/splunk-forwarder/splunkclouduf.spl":"/install/splunkclouduf.spl" \
--v "/Users/pykaso/mobile-logs":/var/log/splunk syslog-splunk -edv
+-v "/Users/pykaso/mobile-logs":/var/log/splunk pykaso/mobile-syslog-splunk -edv
 ```
 
 
@@ -77,7 +81,7 @@ docker run --name syslog-splunk-forwarder -it -p 6514:6514 \
 -v "/Users/pykaso/samples/syslog-ng-config/syslog-ng.conf":/etc/syslog-ng/syslog-ng.conf 
 -v "/Users/pykaso/samples/syslog-ng-config/conf.d":/etc/syslog-ng/conf.d \
 -v "/Users/pykaso/samples/splunk-forwarder/splunkclouduf.spl":"/install/splunkclouduf.spl" \
--v "/Users/pykaso/mobile-logs":/var/log/splunk syslog-splunk
+-v "/Users/pykaso/mobile-logs":/var/log/splunk pykaso/mobile-syslog-splunk
 ```
 
 
