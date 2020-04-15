@@ -3,7 +3,7 @@ Syslog server with Splunk Universal Forwarder for Docker baked to allow remote l
 
 Syslog-ng is installed with all of its modules and preconfigured to listen on port **6514** with **TLS required** and client authentication disabled. If needed, You can use your own `syslog-ng.conf`.
 
-The server is configured to accept only messages with the whitelisted access token. Whitelisted access tokens must be stored in `enabled_tokens.list` file.
+The server is configured to accept only messages with the whitelisted access token. Whitelisted access tokens must be stored in `enabled_tokens.list` file. Default `enabled_tokens.list` file in docker container contains one testing token `"valid-token"`.
 
 Accepted log entries are stored to `messages_${YEAR}-${MONTH}-${DAY}.log`  files in directory `/var/log/splunk` This directory should be mounted as volume to some other place.
 
@@ -32,16 +32,6 @@ For whitelisting the mobile clients, create a new file named `enabled_tokens.lis
 The created directory `cert.d`, file `enabled_tokens.list` and downloaded universal forwarder credentials package named `splunkclouduf.spl` are expected to be mounted to the docker container.
 
 Admin password for Splunk forwarder used to setup admin account must be provided as environment variable named `SPLUNK_PASSWD`
-
-
-
-## Build
-
-Clone this repository, enter to `docker-image` directory and run command below to build container locally.
-
-```
-docker build -t syslog-splunk .
-```
 
 
 
@@ -82,6 +72,52 @@ docker run --name syslog-splunk-forwarder -it -p 6514:6514 \
 -v "/Users/pykaso/samples/syslog-ng-config/conf.d":/etc/syslog-ng/conf.d \
 -v "/Users/pykaso/samples/splunk-forwarder/splunkclouduf.spl":"/install/splunkclouduf.spl" \
 -v "/Users/pykaso/mobile-logs":/var/log/splunk pykaso/mobile-syslog-splunk
+```
+
+
+
+## Build
+
+Clone this repository, enter to `docker-image` directory and run command below to build container locally.
+
+```
+docker build -t syslog-splunk .
+```
+
+
+
+## Test
+
+To check if everything is working properly, try to send log testing message from command line. Message format is standard [Rfc5424](https://tools.ietf.org/html/rfc5424) message.
+
+```
+echo -e "<12>1 2020-04-15T12:25:07.748000+02:00 cmdline 0.0.0 - - [meta token=\"valid-token\"] Hello from command line" | openssl s_client -connect 0.0.0.0:6514
+```
+
+
+
+## The syslog message structure
+
+Syslog message, defined by [Rfc5424](https://tools.ietf.org/html/rfc5424) is composed of a three parts:
+
+- **header**
+
+  - Priority
+  - Version
+  - Timestamp
+  - Hostname
+  - Application
+  - Process id
+  - Message id
+
+- **structured data** - section with square brackets
+
+- **message**
+
+  
+
+```
+<priority>VERSION ISOTIMESTAMP HOSTNAME APPLICATION PID MESSAGEID [STRUCTURED-DATA] MESSAGE
 ```
 
 
